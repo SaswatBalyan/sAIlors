@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">Synthesys</string>
+    <string name="app_description">Geo-AI feasibility &amp; prediction</string>
+    <string name="hero_title">Empowering Startups</string>
+    <string name="hero_subtitle">A hub to find, curate, and employ AI agents. Hire custom AI workforces to supercharge productivity and revolutionize how you create value.</string>
+    <string name="analyze_button">Join Waitlist</string>
+    <string name="community_button">Join Community</string>
+    <string name="analyze_title">Feasibility Analysis</string>
+    <string name="analyze_subtitle">Fill the details; we'll estimate demand, risk, and competition for your idea.</string>
+    <string name="results_title">Results</string>
+    <string name="project_type">Project Type</string>
+    <string name="city">City</string>
+    <string name="address">Address (optional)</string>
+    <string name="budget">Budget (₹ in lakh)</string>
+    <string name="capacity">Seating Capacity</string>
+    <string name="open_hours">Open Hours</string>
+    <string name="latitude">Latitude</string>
+    <string name="longitude">Longitude</string>
+    <string name="radius">Radius (meters)</string>
+    <string name="use_my_location">Use my location</string>
+    <string name="population_density">Use Population Density</string>
+    <string name="consider_competition">Consider Competition</string>
+    <string name="notes">Notes / Extra Context</string>
+    <string name="analyze_feasibility">Analyze Feasibility</string>
+    <string name="get_prediction">Get Prediction</string>
+    <string name="export_json">Export JSON</string>
+</resources>
