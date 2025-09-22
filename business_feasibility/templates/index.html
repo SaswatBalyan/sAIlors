@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Business Feasibility Analyzer</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body>
+
+<h2>Business Feasibility Analyzer</h2>
+
+<form method="POST">
+  <label for="location">Location (lat,lng):</label>
+  <input type="text" name="location" id="location" placeholder="28.6139,77.2090" required>
+
+  <label for="business">Business Type:</label>
+  <select name="business" id="business">
+    <option value="restaurant">Restaurant</option>
+    <option value="cafe">Cafe</option>
+    <option value="gym">Gym/Fitness Center</option>
+    <option value="pharmacy">Pharmacy</option>
+    <option value="grocery_or_supermarket">Grocery Store</option>
+    <option value="bar">Bar</option>
+    <option value="shopping_mall">Shopping Mall</option>
+    <option value="lodging">Hotel/Inn</option>
+  </select>
+
+  <button type="submit">Analyze</button>
+</form>
+
+{% if result %}
+<div class="result">
+  <h3>Feasibility Result</h3>
+
+  <p><strong>Feasibility:</strong> {{ result.feasibility }}%</p>
+  <div class="bar-container">
+    <div class="bar {{ result.competition }}" style="width: {{ result.feasibility }}%;"></div>
+  </div>
+
+  <p><strong>Competition Level:</strong> {{ result.competition }}</p>
+
+  <h4>Pros:</h4>
+  <ul class="pros">
+    {% for pro in result.pros %}
+      <li>✔ {{ pro }}</li>
+    {% endfor %}
+  </ul>
+
+  <h4>Cons:</h4>
+  <ul class="cons">
+    {% for con in result.cons %}
+      <li>✖ {{ con }}</li>
+    {% endfor %}
+  </ul>
+
+  <h4>Nearby Businesses:</h4>
+  <ul>
+    {% for business in result.businesses %}
+      <li>{{ business }}</li>
+    {% endfor %}
+  </ul>
+
+  <h4>Map of Nearby Businesses:</h4>
+  <div id="map"></div>
+</div>
+
+<script>
+var map = L.map('map').setView([{{ result.user_location[0] }}, {{ result.user_location[1] }}], 15);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+
+// User location marker
+L.marker([{{ result.user_location[0] }}, {{ result.user_location[1] }}]).addTo(map)
+    .bindPopup("Your selected location").openPopup();
+
+// Nearby businesses markers
+{% for biz in result.businesses %}
+    {% set parts = biz.split(' at ') %}
+    {% if parts|length == 2 %}
+        {% set name = parts[0] %}
+        {% set latlng = parts[1].split(',') %}
+        L.marker([{{ latlng[0] }}, {{ latlng[1] }}]).addTo(map)
+          .bindPopup("{{ name }}");
+    {% endif %}
+{% endfor %}
+</script>
+{% endif %}
+
+</body>
+</html>
