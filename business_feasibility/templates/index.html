@@ -28,14 +28,43 @@
     <option value="bar">Bar</option>
     <option value="shopping_mall">Shopping Mall</option>
     <option value="lodging">Hotel/Inn</option>
+    <option value="retail_store">Retail Store</option>
+    <option value="beauty_salon">Beauty Salon</option>
+    <option value="clinic">Medical Clinic</option>
+    <option value="bank">Bank/Financial Services</option>
   </select>
+
+  <label for="budget">Budget (in INR Lakhs):</label>
+  <input type="number" name="budget" id="budget" placeholder="5" min="1" step="0.5" required>
+
+  <label for="extra_notes">Additional Notes (optional):</label>
+  <textarea name="extra_notes" id="extra_notes" placeholder="Any specific requirements, target audience, or special considerations..." rows="3"></textarea>
 
   <button type="submit">Analyze</button>
 </form>
 
+{% if result and not result.error %}
+<div class="pdf-download">
+  <form method="POST" action="/download_pdf" style="display: inline;">
+    <input type="hidden" name="location" value="{{ request.form.get('location', '') }}">
+    <input type="hidden" name="business" value="{{ request.form.get('business', '') }}">
+    <input type="hidden" name="budget" value="{{ request.form.get('budget', '') }}">
+    <input type="hidden" name="extra_notes" value="{{ request.form.get('extra_notes', '') }}">
+    <button type="submit" class="pdf-button">Download Detailed PDF Report</button>
+  </form>
+</div>
+{% endif %}
+
 {% if result %}
 <div class="result">
-  <h3>Feasibility Result</h3>
+  {% if result.error %}
+  <div class="error-message">
+    <h3>Error</h3>
+    <p>{{ result.error }}</p>
+  </div>
+  {% else %}
+  <h3>Business Feasibility Analysis</h3>
+  {% endif %}
 
   <p><strong>Feasibility:</strong> {{ result.feasibility }}%</p>
   <div class="bar-container">
@@ -44,50 +73,92 @@
 
   <p><strong>Competition Level:</strong> {{ result.competition }}</p>
 
-  <h4>Pros:</h4>
+  <h4>Advantages</h4>
   <ul class="pros">
     {% for pro in result.pros %}
-      <li>✔ {{ pro }}</li>
+      <li>{{ pro }}</li>
     {% endfor %}
   </ul>
 
-  <h4>Cons:</h4>
+  <h4>Challenges</h4>
   <ul class="cons">
     {% for con in result.cons %}
-      <li>✖ {{ con }}</li>
+      <li>{{ con }}</li>
     {% endfor %}
   </ul>
 
-  <h4>Nearby Businesses:</h4>
-  <ul>
-    {% for business in result.businesses %}
-      <li>{{ business }}</li>
+  <h4>Market Analysis</h4>
+  <ul class="market-insights">
+    {% for insight in result.market_insights %}
+      <li>{{ insight }}</li>
     {% endfor %}
   </ul>
 
+  <h4>Financial Assessment</h4>
+  <ul class="budget-analysis">
+    {% for analysis in result.budget_analysis %}
+      <li>{{ analysis }}</li>
+    {% endfor %}
+  </ul>
+
+  <h4>Strategic Recommendations</h4>
+  <ul class="recommendations">
+    {% for rec in result.recommendations %}
+      <li>{{ rec }}</li>
+    {% endfor %}
+  </ul>
+
+  <h4>Recommended Business Types</h4>
+  <ul class="recommended-businesses">
+    {% for business_type in result.recommended_businesses %}
+      <li>{{ business_type }}</li>
+    {% endfor %}
+  </ul>
+
+  <h4>Nearby Competitors:</h4>
+  <div class="competitors-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Business Name</th>
+          <th>Location</th>
+          <th>Rating</th>
+          <th>Price Level</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for business in result.businesses %}
+                  <tr>
+                    <td>{{ business.name }}</td>
+                    <td>{{ business.vicinity if business.vicinity else business.location }}</td>
+                    <td>{{ business.rating if business.rating else 'N/A' }}</td>
+                    <td>{{ business.price_level if business.price_level else 'N/A' }}</td>
+                  </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if not result.error %}
   <h4>Map of Nearby Businesses:</h4>
   <div id="map"></div>
-</div>
 
-<script>
-var map = L.map('map').setView([{{ result.user_location[0] }}, {{ result.user_location[1] }}], 15);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+  <script>
+  var map = L.map('map').setView([{{ result.user_location[0] }}, {{ result.user_location[1] }}], 15);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
 
-// User location marker
-L.marker([{{ result.user_location[0] }}, {{ result.user_location[1] }}]).addTo(map)
-    .bindPopup("Your selected location").openPopup();
+  // User location marker
+  L.marker([{{ result.user_location[0] }}, {{ result.user_location[1] }}]).addTo(map)
+      .bindPopup("Your selected location").openPopup();
 
 // Nearby businesses markers
 {% for biz in result.businesses %}
-    {% set parts = biz.split(' at ') %}
-    {% if parts|length == 2 %}
-        {% set name = parts[0] %}
-        {% set latlng = parts[1].split(',') %}
-        L.marker([{{ latlng[0] }}, {{ latlng[1] }}]).addTo(map)
-          .bindPopup("{{ name }}");
-    {% endif %}
+    L.marker([{{ biz.lat }}, {{ biz.lng }}]).addTo(map)
+      .bindPopup("<b>{{ biz.name }}</b><br>Rating: {{ biz.rating if biz.rating else 'N/A' }}<br>Price: {{ biz.price_level if biz.price_level else 'N/A' }}<br>{{ biz.types }}");
 {% endfor %}
-</script>
+  </script>
+  {% endif %}
+</div>
 {% endif %}
 
 </body>
