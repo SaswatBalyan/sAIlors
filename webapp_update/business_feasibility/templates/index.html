@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sAIlors - Business Feasibility Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <div class="logo-icon"></div>
+                <div class="logo-divider"></div>
+                <div class="logo-text">sAIlors</div>
+            </div>
+            <div class="nav-links">
+                <a href="#about" class="nav-link">About</a>
+                <a href="#faqs" class="nav-link">FAQs</a>
+                <a href="#contact" class="nav-link">Contact</a>
+            </div>
+            <div class="nav-cta">
+                <button class="cta-button">Let's fill this Demand Gap</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-background">
+            <img src="{{ url_for('static', filename='images/hero-bg.jpg') }}" alt="Hero Background" class="hero-bg-image">
+        </div>
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1 class="hero-title">Empowering Startups</h1>
+                <p class="hero-subtitle">Find the right Business,<br>in the right Place,<br>at the right Time.</p>
+            </div>
+            <div class="hero-cta">
+                <button class="hero-button" onclick="scrollToForm()">Find your Business Feasibility</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Business Feasibility Analyzer Section -->
+        <section class="analyzer-section" id="analyzer">
+            <div class="section-header">
+                <div class="section-badge">GROW WITH US</div>
+                <h2 class="section-title">Business Feasibility Analyzer</h2>
+            </div>
+
+            <form method="POST" class="analyzer-form" id="feasibilityForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="location" class="form-label">Location (lat,lng)</label>
+                        <input type="text" name="location" id="location" placeholder="28.6139,77.2090" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="business" class="form-label">Business Type</label>
+                        <select name="business" id="business" required>
+                            <option value="">Select Business Type</option>
+                            <option value="restaurant">Restaurant</option>
+                            <option value="cafe">Cafe</option>
+                            <option value="gym">Gym/Fitness Center</option>
+                            <option value="pharmacy">Pharmacy</option>
+                            <option value="grocery_or_supermarket">Grocery Store</option>
+                            <option value="bar">Bar</option>
+                            <option value="shopping_mall">Shopping Mall</option>
+                            <option value="lodging">Hotel/Inn</option>
+                            <option value="retail_store">Retail Store</option>
+                            <option value="beauty_salon">Beauty Salon</option>
+                            <option value="clinic">Medical Clinic</option>
+                            <option value="bank">Bank/Financial Services</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="budget" class="form-label">Budget (in INR Lakhs)</label>
+                        <input type="number" name="budget" id="budget" placeholder="5" min="1" step="0.5" required>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label for="extra_notes" class="form-label">Additional Notes (optional)</label>
+                        <textarea name="extra_notes" id="extra_notes" placeholder="Any specific requirements, target audience, or special considerations..." rows="3"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="analyze-button">
+                        <span class="button-icon"></span>
+                        Analyze
+                    </button>
+                </div>
+            </form>
+
+            {% if result and not result.error %}
+            <div class="pdf-download">
+                <form method="POST" action="/download_pdf" class="pdf-form">
+                    <input type="hidden" name="location" value="{{ request.form.get('location', '') }}">
+                    <input type="hidden" name="business" value="{{ request.form.get('business', '') }}">
+                    <input type="hidden" name="budget" value="{{ request.form.get('budget', '') }}">
+                    <input type="hidden" name="extra_notes" value="{{ request.form.get('extra_notes', '') }}">
+                    <button type="submit" class="pdf-button">
+                        <span class="button-icon"></span>
+                        Download PDF Report
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Results Section -->
+        {% if result %}
+        <section class="results-section">
+            {% if result.error %}
+            <div class="error-message">
+                <h3>Error</h3>
+                <p>{{ result.error }}</p>
+            </div>
+            {% else %}
+            <!-- Feasibility Analysis Header -->
+            <div class="section-header">
+                <div class="section-badge">GROW WITH US</div>
+                <h2 class="section-title">Feasibility Analysis</h2>
+            </div>
+
+            <!-- Feasibility Score Display -->
+            <div class="feasibility-display">
+                <div class="feasibility-card">
+                    <div class="feasibility-label">Feasibility</div>
+                    <div class="feasibility-score">{{ result.feasibility }}%</div>
+                </div>
+                <div class="competition-card">
+                    <div class="competition-label">Competition Level</div>
+                    <div class="competition-level {{ result.competition.lower() }}">{{ result.competition }}</div>
+                </div>
+            </div>
+
+            <!-- Analysis Cards -->
+            <div class="analysis-cards">
+                <div class="analysis-card">
+                    <div class="card-icon advantages-icon"></div>
+                    <h3 class="card-title">Advantages</h3>
+                    <ul class="card-list">
+                        {% for pro in result.pros %}
+                        <li>{{ pro }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div class="analysis-card">
+                    <div class="card-icon challenges-icon"></div>
+                    <h3 class="card-title">Challenges</h3>
+                    <ul class="card-list">
+                        {% for con in result.cons %}
+                        <li>{{ con }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div class="analysis-card">
+                    <div class="card-icon recommendations-icon"></div>
+                    <h3 class="card-title">Recommended Business Types</h3>
+                    <ul class="card-list">
+                        {% for business_type in result.recommended_businesses %}
+                        <li>{{ business_type }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Detailed Analysis -->
+            <div class="detailed-analysis">
+                <div class="analysis-section">
+                    <div class="section-badge">Market Analysis</div>
+                    <div class="analysis-content">
+                        <ul class="analysis-list">
+                            {% for insight in result.market_insights %}
+                            <li>{{ insight }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="analysis-section">
+                    <div class="section-badge">Financial Assessment</div>
+                    <div class="analysis-content">
+                        <ul class="analysis-list">
+                            {% for analysis in result.budget_analysis %}
+                            <li>{{ analysis }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="analysis-section">
+                    <div class="section-badge">Strategic Recommendations</div>
+                    <div class="analysis-content">
+                        <ul class="analysis-list">
+                            {% for rec in result.recommendations %}
+                            <li>{{ rec }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Competitors Table -->
+            <div class="competitors-section">
+                <div class="section-badge">Nearby Competitors</div>
+                <div class="competitors-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Business Name</th>
+                                <th>Location</th>
+                                <th>Rating</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for business in result.businesses %}
+                            <tr>
+                                <td>{{ business.name }}</td>
+                                <td>{{ business.vicinity if business.vicinity else business.location }}</td>
+                                <td>{{ business.rating if business.rating else 'N/A' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Map Section -->
+            <div class="map-section">
+                <div class="section-badge">Map of Nearby Businesses</div>
+                <div id="map" class="business-map"></div>
+            </div>
+            {% endif %}
+        </section>
+        {% endif %}
+    </main>
+
+    <script>
+        function scrollToForm() {
+            document.getElementById('analyzer').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Form submission with loading state
+        document.getElementById('feasibilityForm').addEventListener('submit', function() {
+            const button = this.querySelector('.analyze-button');
+            button.innerHTML = '<span class="button-icon"></span>Analyzing...';
+            button.disabled = true;
+        });
+
+        // Map initialization
+        {% if result and not result.error and result.user_location %}
+        document.addEventListener('DOMContentLoaded', function() {
+            var map = L.map('map').setView([{{ result.user_location[0] }}, {{ result.user_location[1] }}], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+                maxZoom: 19, 
+                attribution: '© OpenStreetMap' 
+            }).addTo(map);
+
+            // User location marker
+            L.marker([{{ result.user_location[0] }}, {{ result.user_location[1] }}]).addTo(map)
+                .bindPopup("Your selected location").openPopup();
+
+            // Nearby businesses markers
+            {% for biz in result.businesses %}
+            L.marker([{{ biz.lat }}, {{ biz.lng }}]).addTo(map)
+                .bindPopup("<b>{{ biz.name }}</b><br>Rating: {{ biz.rating if biz.rating else 'N/A' }}<br>Price: {{ biz.price_level if biz.price_level else 'N/A' }}<br>{{ biz.types }}");
+            {% endfor %}
+        });
+        {% endif %}
+    </script>
+</body>
+</html>
